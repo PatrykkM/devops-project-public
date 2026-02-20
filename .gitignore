@@ -1,0 +1,28 @@
+# Build
+bin/
+obj/
+out/
+
+# Test
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# IDE / OS
+.vs/
+.vscode/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+project.lock.json
+project.fragment.lock.json
+
+# Misc
+*.log

@@ -1,0 +1,39 @@
+trigger:
+  - main
+  - feature/*
+
+pool:
+  name: "Default"
+
+variables:
+  imageName: "catalogapi"
+
+stages:
+  - stage: Build
+    displayName: "Kompilacja i testy"
+    jobs:
+      - job: BuildAndTest
+        displayName: "Build obrazu i uruchomienie testów"
+        steps:
+          - task: UseDotNet@2
+            displayName: "Instalacja .NET SDK"
+            inputs:
+              packageType: "sdk"
+              version: "9.x"
+
+          - script: |
+              echo "## Budowanie obrazu Docker"
+              docker build -f CatalogApi/Dockerfile -t $(imageName):$(Build.BuildId) .
+            displayName: "Docker Build"
+
+          - script: |
+              echo "## Uruchamianie testów"
+              dotnet test --logger "trx;LogFileName=test_results.trx"
+            displayName: "Testy jednostkowe"
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFiles: "**/test_results.trx"
+              testResultsFormat: "VSTest"
+              failTaskOnFailedTests: true
+            displayName: "Publikacja wyników testów"
