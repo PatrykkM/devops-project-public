@@ -3,7 +3,7 @@ namespace CatalogApi.Core;
 /// <summary>
 /// Definiuje i rejestruje wszystkie endpointy HTTP aplikacji.
 /// </summary>
-internal static class RouteRegistration
+public static class RouteRegistration
 {
     private static readonly string[] TemperatureLabels =
     {
