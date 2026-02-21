@@ -6,11 +6,11 @@ Aplikacja webowa w .NET 9 (ASP.NET Core Minimal API) z endpointem powitalnym, ka
 
 ## Endpointy
 
-| Metoda | Ścieżka | Opis |
-| :----- | :------ | :--- |
-| GET | `/` | Tekst powitalny: `Hello DevOps!` |
-| GET | `/products` | Lista produktów w JSON (Laptop, Phone) |
-| GET | `/weatherforecast` | Prognoza pogody na 5 dni (JSON) |
+| Metoda | Ścieżka            | Opis                                   |
+| :----- | :----------------- | :------------------------------------- |
+| GET    | `/`                | Tekst powitalny: `Hello DevOps!`       |
+| GET    | `/products`        | Lista produktów w JSON (Laptop, Phone) |
+| GET    | `/weatherforecast` | Prognoza pogody na 5 dni (JSON)        |
 
 ---
 
@@ -26,6 +26,7 @@ Aplikacja webowa w .NET 9 (ASP.NET Core Minimal API) z endpointem powitalnym, ka
 
 ```bash
 cd CatalogApi
+
 dotnet run
 ```
 
@@ -42,7 +43,7 @@ docker build -f CatalogApi/Dockerfile -t catalogapi:latest .
 docker run -d -p 5055:80 --name catalogapi-container catalogapi:latest
 ```
 
-W przeglądarce:
+W przeglądarce :
 
 - <http://localhost:5055/>
 - <http://localhost:5055/products>
