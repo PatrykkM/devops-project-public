@@ -26,6 +26,7 @@ Aplikacja webowa w .NET 9 (ASP.NET Core Minimal API) z endpointem powitalnym, ka
 
 ```bash
 cd CatalogApi
+
 dotnet run
 ```
 
