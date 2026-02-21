@@ -9,24 +9,27 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup .NET
-      - uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "9.0.x"
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore CatalogApi/CatalogApi.csproj
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build CatalogApi/CatalogApi.csproj --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --configuration Release --no-build --logger "trx;LogFileName=test_results.trx"
+        run: dotnet test CatalogApi.Tests/CatalogApi.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=test_results.trx"
 
       - name: Upload test results (trx)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
