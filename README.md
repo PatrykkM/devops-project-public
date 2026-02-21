@@ -68,4 +68,5 @@ dotnet test CatalogApi.Tests/CatalogApi.Tests.csproj --logger "trx;LogFileName=t
 
 - **CatalogApi** — aplikacja (endpointy w `Core/`)
 - **CatalogApi.Tests** — testy integracyjne (xUnit, `WebApplicationFactory`)
-- **azure-pipelines.yml** — pipeline: build Dockera, testy, publikacja wyników
+- **azure-pipelines.yml** — pipeline CI/CD: testy, build i push obrazu do ACR, wdrożenie na Azure Container App
+- **CI-CD.md** — konfiguracja pipeline (połączenia, zmienne, tworzenie ACR i Container App)

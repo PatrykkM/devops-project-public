@@ -1,19 +1,30 @@
+# CI/CD: build, testy, publikacja obrazu do ACR, wdrożenie na Azure (Container Apps)
+# Wymagane: połączenie z Azure Container Registry i z Azure (ARM) — patrz CI-CD.md
+
 trigger:
   - main
   - feature/*
 
 pool:
-  name: "Default"
+  vmImage: "ubuntu-latest"
 
 variables:
   imageName: "catalogapi"
+  # Ustaw w Pipeline → Variables lub w Variable group (np. z Azure Key Vault):
+  # containerRegistry     — np. myregistry.azurecr.io
+  # imageRepository       — np. catalogapi
+  # dockerRegistryServiceConnection — nazwa połączenia Docker Registry (ACR)
+  # azureSubscription     — nazwa połączenia Azure Resource Manager
+  # resourceGroup         — grupa zasobów z Container App
+  # containerAppName      — nazwa Azure Container App
 
 stages:
+  # ——— CI: kompilacja i testy ———
   - stage: Build
     displayName: "Kompilacja i testy"
     jobs:
-      - job: BuildAndTest
-        displayName: "Build obrazu i uruchomienie testów"
+      - job: Test
+        displayName: "Testy jednostkowe"
         steps:
           - task: UseDotNet@2
             displayName: "Instalacja .NET SDK"
@@ -22,14 +33,9 @@ stages:
               version: "9.x"
 
           - script: |
-              echo "## Budowanie obrazu Docker"
-              docker build -f CatalogApi/Dockerfile -t $(imageName):$(Build.BuildId) .
-            displayName: "Docker Build"
-
-          - script: |
               echo "## Uruchamianie testów"
               dotnet test --logger "trx;LogFileName=test_results.trx"
-            displayName: "Testy jednostkowe"
+            displayName: "Testy"
 
           - task: PublishTestResults@2
             inputs:
@@ -37,3 +43,61 @@ stages:
               testResultsFormat: "VSTest"
               failTaskOnFailedTests: true
             displayName: "Publikacja wyników testów"
+
+      # Build obrazu Docker; na main — także push do ACR
+      - job: BuildImage
+        displayName: "Build i push obrazu Docker"
+        dependsOn: Test
+        condition: succeeded()
+        steps:
+          # Na gałęzi main: build + push do ACR (wymaga zmiennej dockerRegistryServiceConnection)
+          - task: Docker@2
+            displayName: "Build i push do ACR (main)"
+            condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+            inputs:
+              command: buildAndPush
+              containerRegistry: $(dockerRegistryServiceConnection)
+              repository: $(imageRepository)
+              Dockerfile: CatalogApi/Dockerfile
+              buildContext: $(Build.SourcesDirectory)
+              tags: |
+                $(Build.BuildId)
+                latest
+
+          # Na pozostałych gałęziach: tylko build (weryfikacja Dockerfile)
+          - task: Docker@2
+            displayName: "Build obrazu (bez push)"
+            condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/main'))
+            inputs:
+              command: build
+              Dockerfile: CatalogApi/Dockerfile
+              buildContext: $(Build.SourcesDirectory)
+              repository: $(imageName)
+              tags: |
+                $(Build.BuildId)
+
+  # ——— CD: wdrożenie na Azure (tylko main) ———
+  - stage: Deploy
+    displayName: "Wdrożenie na Azure"
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployToContainerApp
+        displayName: "Deploy do Azure Container App"
+        environment: "production"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureCLI@2
+                  displayName: "Aktualizacja obrazu w Container App"
+                  inputs:
+                    azureSubscription: $(azureSubscription)
+                    scriptType: "bash"
+                    scriptLocation: "inlineScript"
+                    inlineScript: |
+                      echo "## Wdrażanie $(containerRegistry)/$(imageRepository):$(Build.BuildId)"
+                      az containerapp update \
+                        --name $(containerAppName) \
+                        --resource-group $(resourceGroup) \
+                        --image $(containerRegistry)/$(imageRepository):$(Build.BuildId)
