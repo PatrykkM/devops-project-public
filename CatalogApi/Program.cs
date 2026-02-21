@@ -1,23 +1,14 @@
-using CatalogApi.Core;
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddOpenApi();
 
-var host = WebApplication.CreateBuilder(args);
-host.Services.AddOpenApi();
+var app = builder.Build();
 
-var webHost = host.Build();
-
-if (webHost.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-    webHost.MapOpenApi();
+    app.MapOpenApi();
 }
 
-webHost.UseHttpsRedirection();
+app.UseHttpsRedirection();
+RouteRegistration.Apply(app);
 
-// Rejestracja tras HTTP
-RouteRegistration.Apply(webHost);
-
-webHost.Urls.Clear();
-webHost.Urls.Add("http://0.0.0.0:80");
-
-webHost.Run();
-
-public partial class Program { }
+app.Run();
